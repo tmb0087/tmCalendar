@@ -64,6 +64,11 @@
             
             <!-- 頂部功能按鈕群 -->
             <div class="flex items-center space-x-1.5 sm:space-x-2">
+                <button onclick="openReminderModal()" id="headerReminderBtn" class="relative flex items-center space-x-1 bg-white/15 hover:bg-white/25 active:bg-white/30 px-3 py-2 rounded-xl text-sm font-medium transition" title="行程提醒設定">
+                    <i data-lucide="bell" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">提醒設定</span>
+                    <span id="reminderStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                </button>
                 <button onclick="openSheetModal()" class="flex items-center space-x-1 bg-white/15 hover:bg-white/25 active:bg-white/30 px-3 py-2 rounded-xl text-sm font-medium transition" title="連結 Google 試算表">
                     <i data-lucide="cloud-download" class="w-4 h-4"></i>
                     <span class="hidden sm:inline">雲端同步</span>
@@ -74,6 +79,11 @@
             </div>
         </div>
     </header>
+
+    <!-- 網頁內即時提醒橫幅 (時間到自動滑出) -->
+    <div id="inAppAlertContainer" class="fixed top-20 inset-x-0 z-50 px-4 pointer-events-none flex flex-col items-center space-y-2.5">
+        <!-- 動態生成提醒卡片 -->
+    </div>
 
     <!-- 主要內容區 -->
     <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-5 pb-24 space-y-5">
@@ -194,6 +204,29 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">參加人員</label>
                     <input type="text" id="taskParticipants" placeholder="例如：王小明、各處室主任" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">個別提醒設定</label>
+                    <select id="taskReminderMode" onchange="toggleTaskCustomReminderInputs()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none text-slate-700">
+                        <option value="default">跟隨系統預設提醒時間</option>
+                        <option value="custom">自訂提前時間（週 / 天 / 時）</option>
+                        <option value="none">關閉此項提醒</option>
+                    </select>
+                    <div id="taskCustomReminderBox" class="hidden grid grid-cols-3 gap-2 mt-2 p-2.5 bg-amber-50/70 border border-amber-200/70 rounded-xl">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-amber-800 mb-1">提前幾週</label>
+                            <input type="number" id="taskRemWeeks" min="0" max="52" value="0" class="w-full px-2.5 py-1.5 bg-white border border-amber-200 rounded-lg text-center font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-amber-800 mb-1">提前幾天</label>
+                            <input type="number" id="taskRemDays" min="0" max="365" value="0" class="w-full px-2.5 py-1.5 bg-white border border-amber-200 rounded-lg text-center font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-amber-800 mb-1">提前幾小時</label>
+                            <input type="number" id="taskRemHours" min="0" max="24" value="1" class="w-full px-2.5 py-1.5 bg-white border border-amber-200 rounded-lg text-center font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -353,37 +386,109 @@
         </div>
     </div>
 
+    <!-- 6. 智慧提醒設定視窗 -->
+    <div id="reminderModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-amber-50/60">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="bell-ring" class="w-5 h-5 text-amber-600"></i>
+                    <span>行程提醒設定</span>
+                </h3>
+                <button onclick="closeModal('reminderModal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 space-y-4">
+                <!-- 總開關 -->
+                <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                    <div>
+                        <div class="text-sm font-bold text-slate-800">啟用自動時間提醒</div>
+                        <div class="text-xs text-slate-500">依據行程開始時間自動彈出提醒</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="reminderEnabledToggle" checked class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+
+                <!-- 預設提前時間 (週、天、時) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">預設提前提醒時間（全填 0 為準時提醒）：</label>
+                    <div class="grid grid-cols-3 gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <div>
+                            <label for="defaultLeadWeeks" class="block text-xs font-medium text-slate-500 mb-1 text-center">週</label>
+                            <input type="number" id="defaultLeadWeeks" min="0" max="52" value="0" class="w-full px-2 py-2 bg-white border border-slate-200 rounded-lg text-center font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label for="defaultLeadDays" class="block text-xs font-medium text-slate-500 mb-1 text-center">天</label>
+                            <input type="number" id="defaultLeadDays" min="0" max="365" value="0" class="w-full px-2 py-2 bg-white border border-slate-200 rounded-lg text-center font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label for="defaultLeadHours" class="block text-xs font-medium text-slate-500 mb-1 text-center">時（小時）</label>
+                            <input type="number" id="defaultLeadHours" min="0" max="24" value="1" class="w-full px-2 py-2 bg-white border border-slate-200 rounded-lg text-center font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 音效與系統通知權限 -->
+                <div class="space-y-2.5 pt-1">
+                    <div class="flex items-center justify-between">
+                        <label for="reminderSoundToggle" class="text-sm text-slate-700 flex items-center gap-2 cursor-pointer">
+                            <i data-lucide="volume-2" class="w-4 h-4 text-indigo-600"></i>
+                            <span>提醒時播放清脆提示音</span>
+                        </label>
+                        <input type="checkbox" id="reminderSoundToggle" checked class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                    </div>
+
+                    <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl flex items-center justify-between gap-2">
+                        <div class="text-xs text-indigo-900">
+                            <p class="font-semibold">系統推播通知：<span id="browserPermStatus" class="underline">檢查中...</span></p>
+                            <p class="text-indigo-700/80 mt-0.5">授權後即使切換到其他分頁也能收到通知</p>
+                        </div>
+                        <button type="button" onclick="requestNotificationPermission()" id="reqPermBtn" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 flex-shrink-0">
+                            開啟權限
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
+                    <button type="button" onclick="testReminderAlert()" class="px-3.5 py-2.5 rounded-xl bg-amber-100 text-amber-800 text-xs font-semibold hover:bg-amber-200 flex items-center gap-1.5">
+                        <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                        <span>測試提醒效果</span>
+                    </button>
+                    <button type="button" onclick="saveReminderSettings()" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow-sm">
+                        儲存設定
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==================== 狀態與全域變數 ====================
         const STORAGE_KEY = 'smart_calendar_tasks_v1';
         const SHEET_URL_KEY = 'smart_calendar_sheet_url_v1';
         const SHEET_NAME_KEY = 'smart_calendar_sheet_name_v1';
+        const REMINDER_CFG_KEY = 'smart_calendar_reminder_cfg_v1';
+        const TRIGGERED_LOG_KEY = 'smart_calendar_triggered_v1';
         
         let tasks = [];
         let selectedDate = getTodayString();
+        let reminderConfig = {
+            enabled: true,
+            weeks: 0,
+            days: 0,
+            hours: 1,
+            sound: true
+        };
+        let triggeredReminders = {}; // 記錄已觸發過的提醒避免重複轟炸
 
-        // ==================== 初始化 ====================
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
+        // ==================== 初始化與本地儲存 ====================
+        window.onload = function() {
             loadFromLocalStorage();
+            loadReminderConfig();
             
-            // 初始化日期選擇器
-            const datePicker = document.getElementById('datePicker');
-            datePicker.value = selectedDate;
-            datePicker.addEventListener('change', (e) => {
-                selectedDate = e.target.value;
-                renderTasks();
-            });
-
-            // 搜尋框監聽
-            document.getElementById('searchInput').addEventListener('input', () => {
-                renderTasks();
-            });
-
-            // 表單提交監聽
-            document.getElementById('taskForm').addEventListener('submit', handleTaskSubmit);
-
-            // 載入已儲存的 Google Sheet 網址與分頁名稱
             const savedUrl = localStorage.getItem(SHEET_URL_KEY);
             if (savedUrl) {
                 document.getElementById('googleSheetUrl').value = savedUrl;
@@ -393,47 +498,27 @@
                 document.getElementById('googleSheetName').value = savedSheetName;
             }
 
+            const datePicker = document.getElementById('datePicker');
+            datePicker.value = selectedDate;
+            datePicker.addEventListener('change', (e) => {
+                selectedDate = e.target.value;
+                renderTasks();
+            });
+
+            document.getElementById('searchInput').addEventListener('input', () => {
+                renderTasks();
+            });
+
+            document.getElementById('taskForm').addEventListener('submit', handleTaskSubmit);
+
             renderTasks();
-        });
+            lucide.createIcons();
 
-        // ==================== 日期處理工具函式 ====================
-        function getTodayString() {
-            const now = new Date();
-            const offset = now.getTimezoneOffset() * 60000;
-            return new Date(now.getTime() - offset).toISOString().split('T')[0];
-        }
+            // 啟動行程提醒檢查迴圈 (每 15 秒檢查一次)
+            checkReminders();
+            setInterval(checkReminders, 15000);
+        };
 
-        function changeDate(days) {
-            if (!selectedDate) selectedDate = getTodayString();
-            const current = new Date(selectedDate + 'T00:00:00');
-            current.setDate(current.getDate() + days);
-            const offset = current.getTimezoneOffset() * 60000;
-            selectedDate = new Date(current.getTime() - offset).toISOString().split('T')[0];
-            document.getElementById('datePicker').value = selectedDate;
-            renderTasks();
-        }
-
-        function goToToday() {
-            selectedDate = getTodayString();
-            document.getElementById('datePicker').value = selectedDate;
-            renderTasks();
-            showToast('已切換至今天', 'info');
-        }
-
-        function formatDisplayDate(dateStr) {
-            if (!dateStr) return { text: '未選擇日期', weekday: '' };
-            const dateObj = new Date(dateStr + 'T00:00:00');
-            const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
-            const y = dateObj.getFullYear();
-            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const d = String(dateObj.getDate()).padStart(2, '0');
-            return {
-                text: `${y}年${m}月${d}日`,
-                weekday: weekdays[dateObj.getDay()]
-            };
-        }
-
-        // ==================== 資料存取 (LocalStorage) ====================
         function loadFromLocalStorage() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
@@ -445,36 +530,68 @@
         }
 
         function saveToLocalStorage() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-            } catch (e) {
-                showToast('儲存失敗，瀏覽器空間可能已滿', 'error');
-            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
         }
 
-        // ==================== 畫面渲染邏輯 ====================
+        // ==================== 日期計算與顯示邏輯 ====================
+        function getTodayString() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function changeDate(offsetDays) {
+            const current = new Date(selectedDate + 'T00:00:00');
+            current.setDate(current.getDate() + offsetDays);
+            const y = current.getFullYear();
+            const m = String(current.getMonth() + 1).padStart(2, '0');
+            const d = String(current.getDate()).padStart(2, '0');
+            selectedDate = `${y}-${m}-${d}`;
+            document.getElementById('datePicker').value = selectedDate;
+            renderTasks();
+        }
+
+        function goToToday() {
+            selectedDate = getTodayString();
+            document.getElementById('datePicker').value = selectedDate;
+            renderTasks();
+        }
+
+        function formatDisplayDate(dateStr) {
+            if (!dateStr) return { text: '未選擇日期', weekday: '' };
+            const dateObj = new Date(dateStr + 'T00:00:00');
+            const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+            const y = dateObj.getFullYear();
+            const m = dateObj.getMonth() + 1;
+            const d = dateObj.getDate();
+            return {
+                text: `${y}年${m}月${d}日`,
+                weekday: weekdays[dateObj.getDay()]
+            };
+        }
+
+        // ==================== 核心渲染畫面 ====================
         function renderTasks() {
             const container = document.getElementById('taskListContainer');
             const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
-            
-            // 更新日期標題與星期
+
+            // 更新頂部日期文字
             const dateInfo = formatDisplayDate(selectedDate);
             document.getElementById('displayDateText').textContent = dateInfo.text;
             document.getElementById('displayWeekday').textContent = dateInfo.weekday;
 
-            // 篩選當日事項
+            // 篩選當日資料
             let dayTasks = tasks.filter(t => t.date === selectedDate);
 
-            // 更新統計徽章 (計算當日總數與未完成數)
+            // 更新統計徽章 (總數與未完成數)
             const totalCount = dayTasks.length;
             const pendingCount = dayTasks.filter(t => !t.completed).length;
-            document.getElementById('totalBadge').textContent = `總計: ${totalCount}`;
             document.getElementById('pendingBadge').textContent = `待辦: ${pendingCount}`;
-            document.getElementById('pendingBadge').className = pendingCount > 0 
-                ? 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800'
-                : 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700';
+            document.getElementById('totalBadge').textContent = `總計: ${totalCount}`;
 
-            // 關鍵字過濾
+            // 關鍵字搜尋過濾
             if (searchQuery) {
                 dayTasks = dayTasks.filter(t => 
                     (t.title && t.title.toLowerCase().includes(searchQuery)) ||
@@ -485,7 +602,7 @@
                 );
             }
 
-            // 排序：未完成在前，已完成在後；同狀態依時間排序
+            // 排序：未完成在前、已完成在後；同狀態依時間排序
             dayTasks.sort((a, b) => {
                 if (a.completed !== b.completed) return a.completed ? 1 : -1;
                 return (a.time || '').localeCompare(b.time || '');
@@ -495,15 +612,13 @@
             if (dayTasks.length === 0) {
                 container.innerHTML = `
                     <div class="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center space-y-3 fade-in">
-                        <div class="w-14 h-14 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+                        <div class="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto">
                             <i data-lucide="calendar-off" class="w-7 h-7"></i>
                         </div>
-                        <h3 class="text-base font-bold text-slate-700">
-                            ${searchQuery ? '找不到符合關鍵字的行程' : '今日尚無安排事項'}
-                        </h3>
-                        <p class="text-sm text-slate-500 max-w-xs mx-auto">
-                            ${searchQuery ? '請嘗試清除搜尋條件，或切換其他日期查看。' : '點擊右下角「新增行程」手動建立，或由上方「雲端同步」匯入 Google 試算表。'}
-                        </p>
+                        <div class="space-y-1">
+                            <h3 class="text-base font-bold text-slate-700">${searchQuery ? '找不到符合條件的事項' : '當日尚無安排行程'}</h3>
+                            <p class="text-xs text-slate-400">${searchQuery ? '請嘗試其他關鍵字，或清空搜尋欄位' : '點擊右下角「新增行程」，或從右上角同步 Google 試算表'}</p>
+                        </div>
                     </div>
                 `;
                 lucide.createIcons();
@@ -513,6 +628,9 @@
             // 渲染卡片列表
             container.innerHTML = dayTasks.map(task => {
                 const isDone = task.completed;
+                const leadText = getTaskReminderLabel(task);
+                const hasActiveReminder = reminderConfig.enabled && !isDone && task.reminder !== 'none';
+
                 return `
                 <div class="bg-white rounded-2xl border ${isDone ? 'border-slate-200/70 bg-slate-50/70 opacity-75' : 'border-slate-200 shadow-sm'} p-4 transition-all fade-in">
                     <div class="flex items-start gap-3.5">
@@ -523,12 +641,18 @@
 
                         <!-- 主要資訊內容 -->
                         <div class="flex-1 min-w-0 space-y-2">
-                            <!-- 時間與承辦單位標籤 -->
+                            <!-- 時間、提醒狀態與承辦單位標籤 -->
                             <div class="flex flex-wrap items-center gap-2">
                                 ${task.time ? `
                                     <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-md ${isDone ? 'bg-slate-200 text-slate-600' : 'bg-indigo-50 text-indigo-700'}">
                                         <i data-lucide="clock" class="w-3.5 h-3.5"></i>
                                         ${escapeHtml(task.time)}
+                                    </span>
+                                ` : ''}
+                                ${hasActiveReminder ? `
+                                    <span class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200/60" title="已開啟時間提醒">
+                                        <i data-lucide="bell" class="w-3 h-3 text-amber-500"></i>
+                                        ${escapeHtml(leadText)}
                                     </span>
                                 ` : ''}
                                 ${task.dept ? `
@@ -588,6 +712,16 @@
         }
 
         // ==================== 新增、編輯與刪除事項 ====================
+        function toggleTaskCustomReminderInputs() {
+            const mode = document.getElementById('taskReminderMode').value;
+            const box = document.getElementById('taskCustomReminderBox');
+            if (mode === 'custom') {
+                box.classList.remove('hidden');
+            } else {
+                box.classList.add('hidden');
+            }
+        }
+
         function openTaskModal(id = null) {
             const form = document.getElementById('taskForm');
             form.reset();
@@ -604,12 +738,28 @@
                 document.getElementById('taskDept').value = task.dept || '';
                 document.getElementById('taskParticipants').value = task.participants || '';
                 document.getElementById('taskNote').value = task.note || '';
+
+                if (task.reminder === 'none') {
+                    document.getElementById('taskReminderMode').value = 'none';
+                } else if (task.reminder && typeof task.reminder === 'object') {
+                    document.getElementById('taskReminderMode').value = 'custom';
+                    document.getElementById('taskRemWeeks').value = task.reminder.weeks || 0;
+                    document.getElementById('taskRemDays').value = task.reminder.days || 0;
+                    document.getElementById('taskRemHours').value = task.reminder.hours || 0;
+                } else {
+                    document.getElementById('taskReminderMode').value = 'default';
+                }
             } else {
                 document.getElementById('taskModalTitle').innerHTML = '<i data-lucide="plus-circle" class="w-5 h-5 text-indigo-600"></i><span>新增行程事項</span>';
                 document.getElementById('taskId').value = '';
                 document.getElementById('taskDate').value = selectedDate || getTodayString();
+                document.getElementById('taskReminderMode').value = 'default';
+                document.getElementById('taskRemWeeks').value = reminderConfig.weeks || 0;
+                document.getElementById('taskRemDays').value = reminderConfig.days || 0;
+                document.getElementById('taskRemHours').value = reminderConfig.hours || 0;
             }
 
+            toggleTaskCustomReminderInputs();
             document.getElementById('taskModal').classList.remove('hidden');
             lucide.createIcons();
         }
@@ -617,6 +767,18 @@
         function handleTaskSubmit(e) {
             e.preventDefault();
             const id = document.getElementById('taskId').value;
+            const remMode = document.getElementById('taskReminderMode').value;
+            let reminderValue = 'default';
+            if (remMode === 'none') {
+                reminderValue = 'none';
+            } else if (remMode === 'custom') {
+                reminderValue = {
+                    weeks: Math.max(0, parseInt(document.getElementById('taskRemWeeks').value, 10) || 0),
+                    days: Math.max(0, parseInt(document.getElementById('taskRemDays').value, 10) || 0),
+                    hours: Math.max(0, parseInt(document.getElementById('taskRemHours').value, 10) || 0)
+                };
+            }
+
             const taskData = {
                 date: document.getElementById('taskDate').value,
                 time: document.getElementById('taskTime').value.trim(),
@@ -624,15 +786,18 @@
                 location: document.getElementById('taskLocation').value.trim(),
                 dept: document.getElementById('taskDept').value.trim(),
                 participants: document.getElementById('taskParticipants').value.trim(),
+                reminder: reminderValue,
                 note: document.getElementById('taskNote').value.trim()
             };
 
             if (id) {
-                // 更新現有項目
+                // 更新現有項目（若修改了時間或提醒設定，重置該項目的已提醒紀錄以便重新計算）
                 const index = tasks.findIndex(t => t.id === id);
                 if (index !== -1) {
                     tasks[index] = { ...tasks[index], ...taskData };
-                    showToast('已更新事項與註記');
+                    delete triggeredReminders[id];
+                    localStorage.setItem(TRIGGERED_LOG_KEY, JSON.stringify(triggeredReminders));
+                    showToast('已更新事項與提醒設定');
                 }
             } else {
                 // 新增項目
@@ -1148,6 +1313,306 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        // ==================== 智慧行程提醒引擎 ====================
+        function loadReminderConfig() {
+            try {
+                const saved = localStorage.getItem(REMINDER_CFG_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    reminderConfig = {
+                        enabled: parsed.enabled !== undefined ? parsed.enabled : true,
+                        weeks: parsed.weeks || 0,
+                        days: parsed.days || 0,
+                        hours: parsed.hours !== undefined ? parsed.hours : 1,
+                        sound: parsed.sound !== undefined ? parsed.sound : true
+                    };
+                }
+                const logged = localStorage.getItem(TRIGGERED_LOG_KEY);
+                if (logged) triggeredReminders = JSON.parse(logged);
+            } catch (e) {}
+            updateReminderStatusUI();
+        }
+
+        function updateReminderStatusUI() {
+            const dot = document.getElementById('reminderStatusDot');
+            if (dot) {
+                dot.className = reminderConfig.enabled 
+                    ? 'w-2 h-2 rounded-full bg-emerald-400' 
+                    : 'w-2 h-2 rounded-full bg-slate-400';
+            }
+        }
+
+        function formatLeadTimeText(weeks, days, hours) {
+            const w = Number(weeks) || 0;
+            const d = Number(days) || 0;
+            const h = Number(hours) || 0;
+            if (w === 0 && d === 0 && h === 0) return '準時提醒';
+            const parts = [];
+            if (w > 0) parts.push(`${w}週`);
+            if (d > 0) parts.push(`${d}天`);
+            if (h > 0) parts.push(`${h}小時`);
+            return `前${parts.join('')}提醒`;
+        }
+
+        function getTaskLeadConfig(task) {
+            if (task.reminder && typeof task.reminder === 'object') {
+                return {
+                    weeks: Number(task.reminder.weeks) || 0,
+                    days: Number(task.reminder.days) || 0,
+                    hours: Number(task.reminder.hours) || 0
+                };
+            }
+            return {
+                weeks: Number(reminderConfig.weeks) || 0,
+                days: Number(reminderConfig.days) || 0,
+                hours: Number(reminderConfig.hours) || 0
+            };
+        }
+
+        function getTaskReminderLabel(task) {
+            const cfg = getTaskLeadConfig(task);
+            return formatLeadTimeText(cfg.weeks, cfg.days, cfg.hours);
+        }
+
+        function openReminderModal() {
+            document.getElementById('reminderEnabledToggle').checked = reminderConfig.enabled;
+            document.getElementById('defaultLeadWeeks').value = reminderConfig.weeks || 0;
+            document.getElementById('defaultLeadDays').value = reminderConfig.days || 0;
+            document.getElementById('defaultLeadHours').value = reminderConfig.hours || 0;
+            document.getElementById('reminderSoundToggle').checked = reminderConfig.sound;
+            updateBrowserPermText();
+            document.getElementById('reminderModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function saveReminderSettings() {
+            reminderConfig.enabled = document.getElementById('reminderEnabledToggle').checked;
+            reminderConfig.weeks = Math.max(0, parseInt(document.getElementById('defaultLeadWeeks').value, 10) || 0);
+            reminderConfig.days = Math.max(0, parseInt(document.getElementById('defaultLeadDays').value, 10) || 0);
+            reminderConfig.hours = Math.max(0, parseInt(document.getElementById('defaultLeadHours').value, 10) || 0);
+            reminderConfig.sound = document.getElementById('reminderSoundToggle').checked;
+            localStorage.setItem(REMINDER_CFG_KEY, JSON.stringify(reminderConfig));
+            updateReminderStatusUI();
+            renderTasks();
+            closeModal('reminderModal');
+            
+            const summary = formatLeadTimeText(reminderConfig.weeks, reminderConfig.days, reminderConfig.hours);
+            showToast(reminderConfig.enabled ? `已儲存設定（預設${summary}）` : '已暫停行程提醒');
+            checkReminders();
+        }
+
+        function updateBrowserPermText() {
+            const statusEl = document.getElementById('browserPermStatus');
+            const btnEl = document.getElementById('reqPermBtn');
+            if (!('Notification' in window)) {
+                statusEl.textContent = '此瀏覽器不支援';
+                btnEl.classList.add('hidden');
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                statusEl.textContent = '已開啟允許';
+                statusEl.className = 'font-bold text-emerald-700';
+                btnEl.textContent = '已授權';
+                btnEl.disabled = true;
+                btnEl.className = 'px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg opacity-80 cursor-default';
+            } else if (Notification.permission === 'denied') {
+                statusEl.textContent = '已被封鎖（請至瀏覽器設定開啟）';
+                statusEl.className = 'font-bold text-rose-600';
+                btnEl.classList.add('hidden');
+            } else {
+                statusEl.textContent = '尚未授權';
+                statusEl.className = 'font-bold text-amber-700';
+            }
+        }
+
+        async function requestNotificationPermission() {
+            if (!('Notification' in window)) return;
+            try {
+                const perm = await Notification.requestPermission();
+                updateBrowserPermText();
+                if (perm === 'granted') {
+                    showToast('已開啟系統推播通知權限！');
+                }
+            } catch (e) {
+                showToast('無法取得通知權限，將使用網頁內提醒', 'info');
+            }
+        }
+
+        /**
+         * 從時程字串中擷取開始時間 (例如 "09:00-10:30" 或 "上午 9:30" -> { hour: 9, minute: 30 })
+         */
+        function extractStartTime(timeStr) {
+            if (!timeStr) return null;
+            const match = timeStr.match(/(\d{1,2})[:：](\d{2})/);
+            if (!match) return null;
+            let hour = parseInt(match[1], 10);
+            const minute = parseInt(match[2], 10);
+            if ((timeStr.includes('下午') || timeStr.toUpperCase().includes('PM')) && hour < 12) {
+                hour += 12;
+            }
+            if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+                return { hour, minute };
+            }
+            return null;
+        }
+
+        /**
+         * 使用 Web Audio API 合成清脆的雙音節提示鈴聲 (無需外部音檔)
+         */
+        function playNotificationSound() {
+            if (!reminderConfig.sound) return;
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+
+                [587.33, 880].forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.16);
+                    gain.gain.setValueAtTime(0.001, now + idx * 0.16);
+                    gain.gain.exponentialRampToValueAtTime(0.25, now + idx * 0.16 + 0.03);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.16 + 0.45);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + idx * 0.16);
+                    osc.stop(now + idx * 0.16 + 0.46);
+                });
+            } catch (e) {
+                // 瀏覽器若限制自動播放音效則略過
+            }
+        }
+
+        /**
+         * 檢查所有未完成行程是否到達提醒時間 (支援提前多週、多天、多小時)
+         */
+        function checkReminders() {
+            if (!reminderConfig.enabled) return;
+            const now = new Date();
+
+            tasks.forEach(task => {
+                if (task.completed || !task.date) return;
+                if (task.reminder === 'none') return;
+
+                // 若未填寫具體時間，預設以當日 08:00 作為基準計算提前週/天/時
+                const startTime = extractStartTime(task.time) || { hour: 8, minute: 0 };
+                const [y, m, d] = task.date.split('-').map(Number);
+                if (!y || !m || !d) return;
+
+                const eventTime = new Date(y, m - 1, d, startTime.hour, startTime.minute, 0);
+                const leadCfg = getTaskLeadConfig(task);
+                const leadMs = ((leadCfg.weeks * 7 + leadCfg.days) * 24 + leadCfg.hours) * 3600 * 1000;
+                const triggerTime = new Date(eventTime.getTime() - leadMs);
+
+                // 檢查是否有延後提醒的時間戳
+                const snoozeUntil = triggeredReminders[task.id + '_snooze'];
+                if (snoozeUntil) {
+                    if (now.getTime() >= snoozeUntil) {
+                        delete triggeredReminders[task.id + '_snooze'];
+                        triggerAlertForTask(task, leadCfg);
+                    }
+                    return;
+                }
+
+                // 若現在時間已進入提醒區間（已達提前提醒時間，且尚未超過活動開始後 30 分鐘）
+                const diffMs = now.getTime() - triggerTime.getTime();
+                const pastEventMs = now.getTime() - eventTime.getTime();
+
+                if (diffMs >= 0 && pastEventMs <= 30 * 60000 && !triggeredReminders[task.id]) {
+                    triggerAlertForTask(task, leadCfg);
+                }
+            });
+        }
+
+        function triggerAlertForTask(task, leadCfg, isTest = false) {
+            if (!isTest) {
+                triggeredReminders[task.id] = Date.now();
+                localStorage.setItem(TRIGGERED_LOG_KEY, JSON.stringify(triggeredReminders));
+            }
+
+            playNotificationSound();
+
+            const leadDesc = formatLeadTimeText(leadCfg.weeks, leadCfg.days, leadCfg.hours);
+            const timeLabel = isTest 
+                ? `測試提醒（目前設定：${leadDesc}）` 
+                : (leadDesc === '準時提醒' ? '行程現在即將開始！' : `行程提醒（${leadDesc}・日期 ${task.date}）`);
+
+            // 1. 顯示網頁內醒目橫幅
+            showInAppAlertBanner(task, timeLabel, isTest);
+
+            // 2. 若已授權系統推播通知，同步發送
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification(`📅 行程提醒：${task.title}`, {
+                        body: `${timeLabel}\n日期：${task.date} ${task.time || ''}\n地點：${task.location || '無'}`,
+                        tag: task.id
+                    });
+                } catch (e) {}
+            }
+        }
+
+        function showInAppAlertBanner(task, timeLabel, isTest = false) {
+            const container = document.getElementById('inAppAlertContainer');
+            const bannerId = 'alert_' + Date.now();
+            const banner = document.createElement('div');
+            banner.id = bannerId;
+            banner.className = 'pointer-events-auto w-full max-w-md bg-slate-900 text-white rounded-2xl shadow-2xl border border-amber-400/50 p-4 flex items-start gap-3 fade-in';
+            banner.innerHTML = `
+                <div class="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl flex-shrink-0 animate-bounce">
+                    <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs font-bold text-amber-400">${escapeHtml(timeLabel)}</div>
+                    <div class="text-sm font-bold text-white mt-0.5 truncate">${escapeHtml(task.title)}</div>
+                    <div class="text-xs text-slate-300 mt-1 flex flex-wrap gap-x-3">
+                        ${task.time ? `<span>🕒 ${escapeHtml(task.time)}</span>` : ''}
+                        ${task.location ? `<span>📍 ${escapeHtml(task.location)}</span>` : ''}
+                    </div>
+                    <div class="mt-3 flex items-center gap-2">
+                        <button onclick="dismissAlertBanner('${bannerId}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition">
+                            我知道了
+                        </button>
+                        ${!isTest ? `
+                            <button onclick="snoozeTaskReminder('${task.id}', '${bannerId}')" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-medium rounded-lg transition">
+                                延後 5 分鐘
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            container.appendChild(banner);
+            lucide.createIcons();
+        }
+
+        function dismissAlertBanner(bannerId) {
+            const el = document.getElementById(bannerId);
+            if (el) el.remove();
+        }
+
+        function snoozeTaskReminder(taskId, bannerId) {
+            dismissAlertBanner(bannerId);
+            triggeredReminders[taskId + '_snooze'] = Date.now() + 5 * 60000;
+            localStorage.setItem(TRIGGERED_LOG_KEY, JSON.stringify(triggeredReminders));
+            showToast('將在 5 分鐘後再次提醒您', 'info');
+        }
+
+        function testReminderAlert() {
+            const currentLead = {
+                weeks: Math.max(0, parseInt(document.getElementById('defaultLeadWeeks').value, 10) || 0),
+                days: Math.max(0, parseInt(document.getElementById('defaultLeadDays').value, 10) || 0),
+                hours: Math.max(0, parseInt(document.getElementById('defaultLeadHours').value, 10) || 0)
+            };
+            const sampleTask = {
+                id: 'test_alert',
+                date: selectedDate || getTodayString(),
+                title: '115學年度校務會議（測試範例）',
+                time: '09:00-10:30',
+                location: '第一會議室'
+            };
+            triggerAlertForTask(sampleTask, currentLead, true);
         }
     </script>
 </body>
