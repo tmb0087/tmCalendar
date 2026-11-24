@@ -58,18 +58,22 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold tracking-tight leading-tight">行程與代辦提醒</h1>
-                    <p class="text-xs text-indigo-100 opacity-90">雲端同步・即時註記</p>
+                    <p id="lastSyncText" class="text-[11px] text-indigo-100 opacity-90">雲端同步・即時註記</p>
                 </div>
             </div>
             
             <!-- 頂部功能按鈕群 -->
             <div class="flex items-center space-x-1.5 sm:space-x-2">
-                <button onclick="openReminderModal()" id="headerReminderBtn" class="relative flex items-center space-x-1 bg-white/15 hover:bg-white/25 active:bg-white/30 px-3 py-2 rounded-xl text-sm font-medium transition" title="行程提醒設定">
+                <button onclick="openBriefingModal()" class="flex items-center space-x-1 bg-white/15 hover:bg-white/25 active:bg-white/30 px-2.5 sm:px-3 py-2 rounded-xl text-sm font-medium transition" title="今日與近期行程簡報">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i>
+                    <span class="hidden sm:inline">今日簡報</span>
+                </button>
+                <button onclick="openReminderModal()" id="headerReminderBtn" class="relative flex items-center space-x-1 bg-white/15 hover:bg-white/25 active:bg-white/30 px-2.5 sm:px-3 py-2 rounded-xl text-sm font-medium transition" title="行程提醒設定">
                     <i data-lucide="bell" class="w-4 h-4"></i>
                     <span class="hidden sm:inline">提醒設定</span>
                     <span id="reminderStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
                 </button>
-                <button onclick="openSheetModal()" class="flex items-center space-x-1 bg-white/15 hover:bg-white/25 active:bg-white/30 px-3 py-2 rounded-xl text-sm font-medium transition" title="連結 Google 試算表">
+                <button onclick="openSheetModal()" class="flex items-center space-x-1 bg-white/15 hover:bg-white/25 active:bg-white/30 px-2.5 sm:px-3 py-2 rounded-xl text-sm font-medium transition" title="連結 Google 試算表">
                     <i data-lucide="cloud-download" class="w-4 h-4"></i>
                     <span class="hidden sm:inline">雲端同步</span>
                 </button>
@@ -86,19 +90,37 @@
     </div>
 
     <!-- 主要內容區 -->
-    <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-5 pb-24 space-y-5">
+    <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-5 pb-24 space-y-4">
 
-        <!-- 日期控制與統計卡片 -->
-        <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 space-y-4">
+        <!-- 檢視模式切換 (單日檢視 vs 未來7天總覽) -->
+        <div class="grid grid-cols-2 gap-1.5 bg-slate-200/80 p-1 rounded-2xl">
+            <button onclick="switchViewMode('day')" id="tabDayView" class="flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold bg-white text-indigo-700 shadow-xs transition">
+                <i data-lucide="calendar-days" class="w-4 h-4"></i>
+                <span>單日行程檢視</span>
+            </button>
+            <button onclick="switchViewMode('week')" id="tabWeekView" class="flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-800 transition">
+                <i data-lucide="calendar-range" class="w-4 h-4"></i>
+                <span>未來 7 天總覽</span>
+            </button>
+        </div>
+
+        <!-- 日期控制、月曆展開與統計卡片 -->
+        <section id="dateControlSection" class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 space-y-3.5">
             <!-- 日期選擇與快捷切換 -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div class="relative flex-1">
-                    <label for="datePicker" class="sr-only">選擇日期</label>
-                    <div class="relative flex items-center">
-                        <i data-lucide="calendar" class="w-5 h-5 text-indigo-600 absolute left-3.5 pointer-events-none"></i>
-                        <input type="date" id="datePicker" 
-                            class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition cursor-pointer">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div class="flex items-center gap-2 flex-1">
+                    <div class="relative flex-1">
+                        <label for="datePicker" class="sr-only">選擇日期</label>
+                        <div class="relative flex items-center">
+                            <i data-lucide="calendar" class="w-5 h-5 text-indigo-600 absolute left-3.5 pointer-events-none"></i>
+                            <input type="date" id="datePicker" 
+                                class="w-full pl-11 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition cursor-pointer">
+                        </div>
                     </div>
+                    <button onclick="toggleMonthCalendar()" id="toggleCalBtn" class="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/70 rounded-xl font-semibold text-sm transition flex-shrink-0" title="展開/收合月曆圓點檢視">
+                        <i data-lucide="grid" class="w-4 h-4"></i>
+                        <span>月曆</span>
+                    </button>
                 </div>
 
                 <!-- 前一天 / 今天 / 後一天 快捷鈕 -->
@@ -117,11 +139,36 @@
                 </div>
             </div>
 
+            <!-- 可展開/收合的月曆圓點標記檢視 -->
+            <div id="monthCalendarBox" class="hidden pt-3 border-t border-slate-100 space-y-3 fade-in">
+                <div class="flex items-center justify-between px-1">
+                    <button onclick="changeCalendarMonth(-1)" class="p-1.5 hover:bg-slate-100 rounded-lg text-slate-600">
+                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    </button>
+                    <div class="flex items-center gap-3">
+                        <span id="calMonthTitle" class="font-bold text-slate-800 text-base">2026年 11月</span>
+                        <div class="flex items-center gap-2 text-[11px] text-slate-500">
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span>有待辦</span>
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>全完成</span>
+                        </div>
+                    </div>
+                    <button onclick="changeCalendarMonth(1)" class="p-1.5 hover:bg-slate-100 rounded-lg text-slate-600">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-7 text-center text-xs font-semibold text-slate-400 pb-1">
+                    <div class="text-rose-500">日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div class="text-indigo-500">六</div>
+                </div>
+                <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-center">
+                    <!-- 動態生成月曆日期格 -->
+                </div>
+            </div>
+
             <!-- 當日狀態視覺提示列 -->
             <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-sm">
                 <div class="flex items-center space-x-2">
-                    <span id="displayDateText" class="font-bold text-slate-700">2026年11月23日</span>
-                    <span id="displayWeekday" class="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md font-medium">週一</span>
+                    <span id="displayDateText" class="font-bold text-slate-700">2026年11月24日</span>
+                    <span id="displayWeekday" class="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md font-medium">週二</span>
                 </div>
                 <div class="flex items-center space-x-2">
                     <span id="pendingBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
@@ -134,11 +181,17 @@
             </div>
         </section>
 
-        <!-- 快速搜尋過濾列 (當日事項多時實用) -->
-        <div class="relative">
-            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-            <input type="text" id="searchInput" placeholder="搜尋當日會議名稱、地點、承辦處室或備註..." 
-                class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+        <!-- 快速搜尋與處室智慧篩選列 -->
+        <div class="space-y-2.5">
+            <div class="relative">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="searchInput" placeholder="搜尋會議名稱、地點、承辦處室或備註..." 
+                    class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+            </div>
+            <!-- 動態承辦處室快捷標籤 -->
+            <div id="deptFilterBar" class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                <!-- 動態生成處室膠囊按鈕 -->
+            </div>
         </div>
 
         <!-- 代辦事項列表容器 -->
@@ -171,7 +224,7 @@
                 </button>
             </div>
             
-            <form id="taskForm" class="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+            <form id="taskForm" class="p-5 space-y-4 max-h-[82vh] overflow-y-auto">
                 <input type="hidden" id="taskId">
                 
                 <div class="grid grid-cols-2 gap-3">
@@ -206,6 +259,28 @@
                     <input type="text" id="taskParticipants" placeholder="例如：王小明、各處室主任" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
                 </div>
 
+                <!-- 行前籌備確認清單 (Checklist) -->
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                            <i data-lucide="list-checks" class="w-4 h-4 text-indigo-600"></i>
+                            <span>行前籌備確認清單（選填）</span>
+                        </label>
+                        <span class="text-[11px] text-slate-400">可追蹤準備進度</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="newSubtaskInput" placeholder="輸入準備項目，如：印簽到表、借投影機" 
+                            onkeydown="if(event.key==='Enter'){event.preventDefault(); addSubtaskInModal();}"
+                            class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="button" onclick="addSubtaskInModal()" class="px-3 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-semibold text-xs rounded-lg transition flex-shrink-0">
+                            + 加入
+                        </button>
+                    </div>
+                    <ul id="modalSubtaskList" class="space-y-1.5">
+                        <!-- 動態列出子任務 -->
+                    </ul>
+                </div>
+
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">個別提醒設定</label>
                     <select id="taskReminderMode" onchange="toggleTaskCustomReminderInputs()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none text-slate-700">
@@ -231,7 +306,7 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">個人註記 / 備註說明</label>
-                    <textarea id="taskNote" rows="3" placeholder="在此填寫補充說明、攜帶物品或會後追蹤事項..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none"></textarea>
+                    <textarea id="taskNote" rows="2" placeholder="在此填寫補充說明、攜帶物品或會後追蹤事項..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none"></textarea>
                 </div>
 
                 <div class="pt-2 flex items-center justify-end gap-2.5">
@@ -282,16 +357,22 @@
                     <p id="syncErrorMsg"></p>
                 </div>
 
-                <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="overwriteMode" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                    <label for="overwriteMode" class="text-xs text-slate-600">同步時覆蓋現有雲端匯入的資料（保留手動新增與已勾選狀態）</label>
+                <div class="space-y-2">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="overwriteMode" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                        <label for="overwriteMode" class="text-xs text-slate-600">同步時覆蓋現有雲端匯入的資料（保留手動新增與已勾選狀態）</label>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="autoSyncToggle" checked onchange="saveAutoSyncSetting()" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                        <label for="autoSyncToggle" class="text-xs text-slate-600">開啟網頁時若超過 1 小時未更新，自動在背景同步</label>
+                    </div>
                 </div>
 
                 <div class="pt-2 flex flex-col sm:flex-row items-center justify-end gap-2">
                     <button type="button" onclick="loadDemoData()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">
                         載入測試範例資料
                     </button>
-                    <button type="button" id="syncBtn" onclick="syncGoogleSheet()" class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 shadow-sm">
+                    <button type="button" id="syncBtn" onclick="syncGoogleSheet(false)" class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 shadow-sm">
                         <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                         <span>立即同步資料</span>
                     </button>
@@ -303,10 +384,10 @@
     <!-- 3. 資料管理、Excel 匯入匯出與清空視窗 -->
     <div id="toolsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                 <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <i data-lucide="database" class="w-5 h-5 text-indigo-600"></i>
-                    <span>資料備份與管理</span>
+                    <span>資料管理與備份</span>
                 </h3>
                 <button onclick="closeModal('toolsModal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -314,30 +395,30 @@
             </div>
             
             <div class="p-5 space-y-3">
-                <!-- Excel 上傳備用 -->
-                <label class="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl cursor-pointer transition">
+                <!-- 本機 Excel 上傳備用 -->
+                <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 cursor-pointer transition">
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
                             <i data-lucide="upload" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <div class="text-sm font-semibold text-slate-800">本機 Excel / CSV 匯入</div>
-                            <div class="text-xs text-slate-500">選擇電腦或手機中的試算表檔案</div>
+                            <div class="text-sm font-bold text-slate-800">上傳本機 Excel 檔案</div>
+                            <div class="text-xs text-slate-500">支援 .xlsx / .xls / .csv 格式匯入</div>
                         </div>
                     </div>
-                    <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleLocalExcelUpload(event)">
                     <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                    <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleLocalExcelUpload(event)">
                 </label>
 
                 <!-- 匯出最新 Excel -->
-                <button onclick="exportToExcel()" class="w-full flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition text-left">
+                <button onclick="exportToExcel()" class="w-full flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/40 transition text-left">
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
                             <i data-lucide="download" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <div class="text-sm font-semibold text-slate-800">匯出最新 Excel 備份</div>
-                            <div class="text-xs text-slate-500">包含所有網頁註記與完成狀態</div>
+                            <div class="text-sm font-bold text-slate-800">匯出最新 Excel 備份</div>
+                            <div class="text-xs text-slate-500">包含網頁新增的註記與完成狀態</div>
                         </div>
                     </div>
                     <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
@@ -346,14 +427,14 @@
                 <hr class="border-slate-100 my-2">
 
                 <!-- 清空所有資料 -->
-                <button onclick="confirmClearAllData()" class="w-full flex items-center justify-between p-3.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition text-left">
+                <button onclick="confirmClearAllData()" class="w-full flex items-center justify-between p-3.5 rounded-xl border border-rose-200 bg-rose-50/40 hover:bg-rose-50 transition text-left">
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-rose-100 text-rose-600 rounded-lg">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </div>
                         <div>
-                            <div class="text-sm font-semibold text-rose-700">清空所有本地資料</div>
-                            <div class="text-xs text-rose-500">移除瀏覽器內儲存的所有行程紀錄</div>
+                            <div class="text-sm font-bold text-rose-700">清空所有本地資料</div>
+                            <div class="text-xs text-rose-500">清除瀏覽器中儲存的所有行事曆紀錄</div>
                         </div>
                     </div>
                 </button>
@@ -361,38 +442,13 @@
         </div>
     </div>
 
-    <!-- 4. 自訂二次確認視窗 (取代瀏覽器原生 confirm) -->
-    <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5 space-y-4 text-center">
-            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
-            </div>
-            <div>
-                <h4 id="confirmTitle" class="text-lg font-bold text-slate-800">確定要執行此操作嗎？</h4>
-                <p id="confirmMessage" class="text-sm text-slate-500 mt-1">此動作無法復原。</p>
-            </div>
-            <div class="grid grid-cols-2 gap-2.5 pt-2">
-                <button onclick="closeModal('confirmModal')" class="py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">取消</button>
-                <button id="confirmActionBtn" class="py-2.5 rounded-xl bg-rose-600 text-white font-semibold hover:bg-rose-700">確定執行</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. 輕量提示訊息 (Toast) -->
-    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 hidden transition-all duration-300">
-        <div id="toastContent" class="flex items-center space-x-2 px-4 py-3 rounded-full shadow-lg text-sm font-medium text-white bg-slate-800">
-            <i id="toastIcon" data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
-            <span id="toastText">操作成功</span>
-        </div>
-    </div>
-
-    <!-- 6. 智慧提醒設定視窗 -->
+    <!-- 4. 行程提醒設定視窗 (支援直接設定週、天、時) -->
     <div id="reminderModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-amber-50/60">
                 <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <i data-lucide="bell-ring" class="w-5 h-5 text-amber-600"></i>
-                    <span>行程提醒設定</span>
+                    <span>智慧行程提醒設定</span>
                 </h3>
                 <button onclick="closeModal('reminderModal')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -401,66 +457,120 @@
             
             <div class="p-5 space-y-4">
                 <!-- 總開關 -->
-                <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
                     <div>
                         <div class="text-sm font-bold text-slate-800">啟用自動時間提醒</div>
-                        <div class="text-xs text-slate-500">依據行程開始時間自動彈出提醒</div>
+                        <div class="text-xs text-slate-500">到達設定時間時跳出視窗與鈴聲提醒</div>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="reminderEnabledToggle" checked class="sr-only peer">
+                        <input type="checkbox" id="reminderEnabledToggle" class="sr-only peer" checked>
                         <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                     </label>
                 </div>
 
-                <!-- 預設提前時間 (週、天、時) -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">預設提前提醒時間（全填 0 為準時提醒）：</label>
-                    <div class="grid grid-cols-3 gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <!-- 預設提前時間 (週 / 天 / 時) -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-semibold text-slate-700">預設提前提醒時間（可自由組合）：</label>
+                        <span class="text-[11px] text-slate-400">全填 0 為準時提醒</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2.5 p-3 bg-slate-50 border border-slate-200 rounded-xl">
                         <div>
-                            <label for="defaultLeadWeeks" class="block text-xs font-medium text-slate-500 mb-1 text-center">週</label>
-                            <input type="number" id="defaultLeadWeeks" min="0" max="52" value="0" class="w-full px-2 py-2 bg-white border border-slate-200 rounded-lg text-center font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1 text-center">週</label>
+                            <input type="number" id="defaultLeadWeeks" min="0" max="52" value="0" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-center font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                         <div>
-                            <label for="defaultLeadDays" class="block text-xs font-medium text-slate-500 mb-1 text-center">天</label>
-                            <input type="number" id="defaultLeadDays" min="0" max="365" value="0" class="w-full px-2 py-2 bg-white border border-slate-200 rounded-lg text-center font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1 text-center">天</label>
+                            <input type="number" id="defaultLeadDays" min="0" max="365" value="0" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-center font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                         <div>
-                            <label for="defaultLeadHours" class="block text-xs font-medium text-slate-500 mb-1 text-center">時（小時）</label>
-                            <input type="number" id="defaultLeadHours" min="0" max="24" value="1" class="w-full px-2 py-2 bg-white border border-slate-200 rounded-lg text-center font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1 text-center">時</label>
+                            <input type="number" id="defaultLeadHours" min="0" max="24" value="1" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-center font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                     </div>
                 </div>
 
-                <!-- 音效與系統通知權限 -->
-                <div class="space-y-2.5 pt-1">
-                    <div class="flex items-center justify-between">
-                        <label for="reminderSoundToggle" class="text-sm text-slate-700 flex items-center gap-2 cursor-pointer">
-                            <i data-lucide="volume-2" class="w-4 h-4 text-indigo-600"></i>
-                            <span>提醒時播放清脆提示音</span>
-                        </label>
-                        <input type="checkbox" id="reminderSoundToggle" checked class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                    </div>
+                <!-- 提醒音效開關 -->
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-sm font-medium text-slate-700">提醒時播放清脆提示鈴聲</span>
+                    <input type="checkbox" id="reminderSoundToggle" checked class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                </div>
 
-                    <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl flex items-center justify-between gap-2">
-                        <div class="text-xs text-indigo-900">
-                            <p class="font-semibold">系統推播通知：<span id="browserPermStatus" class="underline">檢查中...</span></p>
-                            <p class="text-indigo-700/80 mt-0.5">授權後即使切換到其他分頁也能收到通知</p>
-                        </div>
-                        <button type="button" onclick="requestNotificationPermission()" id="reqPermBtn" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 flex-shrink-0">
-                            開啟權限
+                <!-- 瀏覽器桌面/手機系統通知授權 -->
+                <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-indigo-900">系統桌面/手機推播通知</span>
+                        <span id="browserPermStatus" class="text-xs font-semibold text-indigo-600">檢查中...</span>
+                    </div>
+                    <p class="text-xs text-indigo-700/80 leading-relaxed">開啟後，即使切換到其他分頁，時間一到也會收到系統通知。</p>
+                    <div class="flex items-center gap-2 pt-1">
+                        <button type="button" id="reqPermBtn" onclick="requestNotificationPermission()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition">
+                            開啟通知權限
+                        </button>
+                        <button type="button" onclick="testReminderAlert()" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold rounded-lg transition">
+                            立即測試提醒效果
                         </button>
                     </div>
                 </div>
 
-                <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
-                    <button type="button" onclick="testReminderAlert()" class="px-3.5 py-2.5 rounded-xl bg-amber-100 text-amber-800 text-xs font-semibold hover:bg-amber-200 flex items-center gap-1.5">
-                        <i data-lucide="play" class="w-3.5 h-3.5"></i>
-                        <span>測試提醒效果</span>
-                    </button>
-                    <button type="button" onclick="saveReminderSettings()" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow-sm">
-                        儲存設定
-                    </button>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('reminderModal')" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50">取消</button>
+                    <button type="button" onclick="saveReminderSettings()" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow-sm">儲存設定</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. 自訂二次確認視窗 (取代 alert/confirm) -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5 space-y-4 text-center">
+            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+            <div class="space-y-1">
+                <h4 id="confirmTitle" class="text-base font-bold text-slate-800">確定要執行此操作嗎？</h4>
+                <p id="confirmMessage" class="text-xs text-slate-500">此動作執行後將無法復原。</p>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5 pt-2">
+                <button onclick="closeModal('confirmModal')" class="py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50">取消</button>
+                <button id="confirmActionBtn" class="py-2.5 rounded-xl bg-rose-600 text-white font-semibold text-sm hover:bg-rose-700">確定執行</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. 輕量提示訊息 Toast -->
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 hidden transition-all">
+        <div class="bg-slate-800 text-white px-4 py-2.5 rounded-full shadow-lg text-sm font-medium flex items-center gap-2">
+            <i id="toastIcon" data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+            <span id="toastText">操作成功</span>
+        </div>
+    </div>
+
+    <!-- 7. 今日與近期行程晨間簡報視窗 -->
+    <div id="briefingModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-600 to-indigo-700 text-white">
+                <h3 class="text-lg font-bold flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-amber-300"></i>
+                    <span>行程晨間簡報摘要</span>
+                </h3>
+                <button onclick="closeModal('briefingModal')" class="p-1.5 text-indigo-100 hover:text-white rounded-lg hover:bg-white/10">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div id="briefingContent" class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+                <!-- 動態生成今日與未來3天摘要 -->
+            </div>
+
+            <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                    <input type="checkbox" id="dailyBriefingToggle" checked onchange="saveBriefingPreference()" class="w-4 h-4 text-indigo-600 rounded border-slate-300">
+                    <span>每日首次開啟網頁時自動顯示簡報</span>
+                </label>
+                <button onclick="closeModal('briefingModal')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl">
+                    開始處理行程
+                </button>
             </div>
         </div>
     </div>
@@ -470,11 +580,22 @@
         const STORAGE_KEY = 'smart_calendar_tasks_v1';
         const SHEET_URL_KEY = 'smart_calendar_sheet_url_v1';
         const SHEET_NAME_KEY = 'smart_calendar_sheet_name_v1';
+        const LAST_SYNC_KEY = 'smart_calendar_last_sync_v1';
+        const AUTO_SYNC_KEY = 'smart_calendar_auto_sync_v1';
+        const BRIEFING_DATE_KEY = 'smart_calendar_briefing_date_v1';
+        const BRIEFING_ENABLED_KEY = 'smart_calendar_briefing_enabled_v1';
         const REMINDER_CFG_KEY = 'smart_calendar_reminder_cfg_v1';
         const TRIGGERED_LOG_KEY = 'smart_calendar_triggered_v1';
         
         let tasks = [];
         let selectedDate = getTodayString();
+        let currentViewMode = 'day'; // 'day' | 'week'
+        let selectedDeptFilter = 'ALL';
+        let isCalendarOpen = false;
+        let calDisplayYear = new Date().getFullYear();
+        let calDisplayMonth = new Date().getMonth(); // 0-11
+        let tempModalSubtasks = [];
+
         let reminderConfig = {
             enabled: true,
             weeks: 0,
@@ -498,10 +619,23 @@
                 document.getElementById('googleSheetName').value = savedSheetName;
             }
 
+            const autoSyncPref = localStorage.getItem(AUTO_SYNC_KEY);
+            if (autoSyncPref !== null) {
+                document.getElementById('autoSyncToggle').checked = autoSyncPref === 'true';
+            }
+
+            const briefingPref = localStorage.getItem(BRIEFING_ENABLED_KEY);
+            if (briefingPref !== null) {
+                document.getElementById('dailyBriefingToggle').checked = briefingPref === 'true';
+            }
+
+            updateLastSyncDisplay();
+
             const datePicker = document.getElementById('datePicker');
             datePicker.value = selectedDate;
             datePicker.addEventListener('change', (e) => {
                 selectedDate = e.target.value;
+                syncCalendarMonthToSelected();
                 renderTasks();
             });
 
@@ -513,6 +647,12 @@
 
             renderTasks();
             lucide.createIcons();
+
+            // 檢查是否需要自動背景同步 (若已設定網址且距離上次同步超過 1 小時)
+            checkAutoBackgroundSync();
+
+            // 檢查每日首次開啟簡報
+            checkDailyBriefing();
 
             // 啟動行程提醒檢查迴圈 (每 15 秒檢查一次)
             checkReminders();
@@ -550,13 +690,538 @@
             const d = String(current.getDate()).padStart(2, '0');
             selectedDate = `${y}-${m}-${d}`;
             document.getElementById('datePicker').value = selectedDate;
+            syncCalendarMonthToSelected();
             renderTasks();
         }
 
         function goToToday() {
             selectedDate = getTodayString();
             document.getElementById('datePicker').value = selectedDate;
+            syncCalendarMonthToSelected();
             renderTasks();
+        }
+
+        function selectSpecificDate(dateStr) {
+            selectedDate = dateStr;
+            document.getElementById('datePicker').value = selectedDate;
+            syncCalendarMonthToSelected();
+            if (currentViewMode !== 'day') {
+                switchViewMode('day');
+            } else {
+                renderTasks();
+            }
+        }
+
+        function syncCalendarMonthToSelected() {
+            if (!selectedDate) return;
+            const [y, m] = selectedDate.split('-').map(Number);
+            if (y && m) {
+                calDisplayYear = y;
+                calDisplayMonth = m - 1;
+            }
+        }
+
+        function switchViewMode(mode) {
+            currentViewMode = mode;
+            const tabDay = document.getElementById('tabDayView');
+            const tabWeek = document.getElementById('tabWeekView');
+            const dateSection = document.getElementById('dateControlSection');
+
+            if (mode === 'day') {
+                tabDay.className = 'flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold bg-white text-indigo-700 shadow-xs transition';
+                tabWeek.className = 'flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-800 transition';
+                dateSection.classList.remove('hidden');
+            } else {
+                tabWeek.className = 'flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold bg-white text-indigo-700 shadow-xs transition';
+                tabDay.className = 'flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-800 transition';
+                dateSection.classList.add('hidden');
+            }
+            renderTasks();
+        }
+
+        // ==================== 月曆圓點標記檢視 ====================
+        function toggleMonthCalendar() {
+            isCalendarOpen = !isCalendarOpen;
+            const box = document.getElementById('monthCalendarBox');
+            const btn = document.getElementById('toggleCalBtn');
+            if (isCalendarOpen) {
+                syncCalendarMonthToSelected();
+                box.classList.remove('hidden');
+                btn.classList.add('bg-indigo-600', 'text-white');
+                btn.classList.remove('bg-indigo-50', 'text-indigo-700');
+                renderMonthCalendar();
+            } else {
+                box.classList.add('hidden');
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-indigo-50', 'text-indigo-700');
+            }
+        }
+
+        function changeCalendarMonth(delta) {
+            calDisplayMonth += delta;
+            if (calDisplayMonth < 0) {
+                calDisplayMonth = 11;
+                calDisplayYear--;
+            } else if (calDisplayMonth > 11) {
+                calDisplayMonth = 0;
+                calDisplayYear++;
+            }
+            renderMonthCalendar();
+        }
+
+        function renderMonthCalendar() {
+            if (!isCalendarOpen) return;
+            document.getElementById('calMonthTitle').textContent = `${calDisplayYear}年 ${calDisplayMonth + 1}月`;
+            
+            const firstDayOfWeek = new Date(calDisplayYear, calDisplayMonth, 1).getDay();
+            const daysInMonth = new Date(calDisplayYear, calDisplayMonth + 1, 0).getDate();
+            const todayStr = getTodayString();
+
+            // 統計該月每日的事項狀態
+            const monthPrefix = `${calDisplayYear}-${String(calDisplayMonth + 1).padStart(2, '0')}-`;
+            const dateStats = {};
+            tasks.forEach(t => {
+                if (t.date && t.date.startsWith(monthPrefix)) {
+                    if (!dateStats[t.date]) dateStats[t.date] = { total: 0, pending: 0 };
+                    dateStats[t.date].total++;
+                    if (!t.completed) dateStats[t.date].pending++;
+                }
+            });
+
+            let html = '';
+            // 前置空白格
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                html += `<div class="h-11"></div>`;
+            }
+
+            // 每一天格子
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${monthPrefix}${String(d).padStart(2, '0')}`;
+                const isSelected = dateStr === selectedDate;
+                const isToday = dateStr === todayStr;
+                const stat = dateStats[dateStr];
+
+                let cellClass = 'h-11 rounded-xl flex flex-col items-center justify-center text-sm font-medium transition relative cursor-pointer ';
+                if (isSelected) {
+                    cellClass += 'bg-indigo-600 text-white font-bold shadow-xs';
+                } else if (isToday) {
+                    cellClass += 'bg-indigo-50 text-indigo-700 font-bold border border-indigo-200';
+                } else {
+                    cellClass += 'hover:bg-slate-100 text-slate-700';
+                }
+
+                let dotHtml = '<span class="w-1.5 h-1.5 mt-0.5 rounded-full opacity-0"></span>';
+                if (stat && stat.total > 0) {
+                    const dotColor = isSelected 
+                        ? 'bg-white' 
+                        : (stat.pending > 0 ? 'bg-amber-500' : 'bg-emerald-500');
+                    dotHtml = `<span class="w-1.5 h-1.5 mt-0.5 rounded-full ${dotColor}"></span>`;
+                }
+
+                html += `
+                    <button type="button" onclick="selectSpecificDate('${dateStr}')" class="${cellClass}">
+                        <span>${d}</span>
+                        ${dotHtml}
+                    </button>
+                `;
+            }
+
+            document.getElementById('calendarGrid').innerHTML = html;
+        }
+
+        // ==================== 承辦處室智慧篩選標籤 ====================
+        function renderDeptFilterBar() {
+            const bar = document.getElementById('deptFilterBar');
+            const depts = new Set();
+            tasks.forEach(t => {
+                if (t.dept && t.dept.trim()) {
+                    depts.add(t.dept.trim());
+                }
+            });
+
+            if (depts.size === 0) {
+                bar.innerHTML = '';
+                selectedDeptFilter = 'ALL';
+                return;
+            }
+
+            const deptList = ['ALL', ...Array.from(depts)];
+            bar.innerHTML = deptList.map(dept => {
+                const isAll = dept === 'ALL';
+                const isActive = selectedDeptFilter === dept;
+                const label = isAll ? '全部處室' : dept;
+                return `
+                    <button type="button" onclick="setDeptFilter('${escapeHtml(dept)}')" 
+                        class="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition flex-shrink-0 ${
+                            isActive 
+                                ? 'bg-indigo-600 text-white shadow-xs' 
+                                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                        }">
+                        ${escapeHtml(label)}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setDeptFilter(dept) {
+            selectedDeptFilter = dept;
+            renderTasks();
+        }
+
+        // ==================== 核心渲染畫面 ====================
+        function renderTasks() {
+            const container = document.getElementById('taskListContainer');
+            const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            renderDeptFilterBar();
+            if (isCalendarOpen) renderMonthCalendar();
+
+            let filteredTasks = [];
+
+            if (currentViewMode === 'day') {
+                // 更新頂部日期文字
+                const dateInfo = formatDisplayDate(selectedDate);
+                document.getElementById('displayDateText').textContent = dateInfo.text;
+                document.getElementById('displayWeekday').textContent = dateInfo.weekday;
+
+                // 篩選單日資料
+                filteredTasks = tasks.filter(t => t.date === selectedDate);
+
+                // 更新統計徽章 (總數與未完成數)
+                const totalCount = filteredTasks.length;
+                const pendingCount = filteredTasks.filter(t => !t.completed).length;
+                document.getElementById('pendingBadge').textContent = `待辦: ${pendingCount}`;
+                document.getElementById('totalBadge').textContent = `總計: ${totalCount}`;
+            } else {
+                // 未來 7 天總覽模式 (今天起算 7 天)
+                const todayStr = getTodayString();
+                const endObj = new Date(todayStr + 'T00:00:00');
+                endObj.setDate(endObj.getDate() + 6);
+                const endStr = `${endObj.getFullYear()}-${String(endObj.getMonth() + 1).padStart(2, '0')}-${String(endObj.getDate()).padStart(2, '0')}`;
+                
+                filteredTasks = tasks.filter(t => t.date >= todayStr && t.date <= endStr);
+            }
+
+            // 處室篩選
+            if (selectedDeptFilter !== 'ALL') {
+                filteredTasks = filteredTasks.filter(t => (t.dept || '').trim() === selectedDeptFilter);
+            }
+
+            // 關鍵字搜尋過濾
+            if (searchQuery) {
+                filteredTasks = filteredTasks.filter(t => 
+                    (t.title && t.title.toLowerCase().includes(searchQuery)) ||
+                    (t.location && t.location.toLowerCase().includes(searchQuery)) ||
+                    (t.dept && t.dept.toLowerCase().includes(searchQuery)) ||
+                    (t.participants && t.participants.toLowerCase().includes(searchQuery)) ||
+                    (t.note && t.note.toLowerCase().includes(searchQuery))
+                );
+            }
+
+            // 排序：未來7天先依日期排序，再依未完成與時間排序；單日則未完成在前
+            filteredTasks.sort((a, b) => {
+                if (currentViewMode === 'week' && a.date !== b.date) {
+                    return a.date.localeCompare(b.date);
+                }
+                if (a.completed !== b.completed) return a.completed ? 1 : -1;
+                return (a.time || '').localeCompare(b.time || '');
+            });
+
+            // 空狀態處理
+            if (filteredTasks.length === 0) {
+                const emptyTitle = searchQuery || selectedDeptFilter !== 'ALL' 
+                    ? '找不到符合篩選條件的事項' 
+                    : (currentViewMode === 'week' ? '未來 7 天尚無安排行程' : '當日尚無安排行程');
+                const emptyDesc = searchQuery || selectedDeptFilter !== 'ALL'
+                    ? '請嘗試切換其他處室標籤或清空搜尋關鍵字'
+                    : '點擊右下角「新增行程」，或從右上角同步 Google 試算表';
+
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center space-y-3 fade-in">
+                        <div class="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto">
+                            <i data-lucide="calendar-off" class="w-7 h-7"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="text-base font-bold text-slate-700">${emptyTitle}</h3>
+                            <p class="text-xs text-slate-400">${emptyDesc}</p>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            // 若為未來 7 天總覽，加上頂部統計提示橫幅
+            let headerBannerHtml = '';
+            if (currentViewMode === 'week') {
+                const weekPending = filteredTasks.filter(t => !t.completed).length;
+                headerBannerHtml = `
+                    <div class="bg-indigo-50/90 border border-indigo-100 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs text-indigo-900">
+                        <span class="font-semibold flex items-center gap-1.5">
+                            <i data-lucide="calendar-range" class="w-4 h-4 text-indigo-600"></i>
+                            今日起未來 7 天共 <strong>${filteredTasks.length}</strong> 項行程
+                        </span>
+                        <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">待辦 ${weekPending}</span>
+                    </div>
+                `;
+            }
+
+            // 渲染卡片列表
+            container.innerHTML = headerBannerHtml + filteredTasks.map(task => renderTaskCardHtml(task, currentViewMode === 'week')).join('');
+            lucide.createIcons();
+        }
+
+        function renderTaskCardHtml(task, showDateBadge = false) {
+            const isDone = task.completed;
+            const leadText = getTaskReminderLabel(task);
+            const hasActiveReminder = reminderConfig.enabled && !isDone && task.reminder !== 'none';
+            const dateInfo = showDateBadge ? formatDisplayDate(task.date) : null;
+            const subtasks = Array.isArray(task.subtasks) ? task.subtasks : [];
+
+            return `
+            <div class="bg-white rounded-2xl border ${isDone ? 'border-slate-200/70 bg-slate-50/70 opacity-75' : 'border-slate-200 shadow-sm'} p-4 transition-all fade-in">
+                <div class="flex items-start gap-3.5">
+                    <!-- 勾選框 (加大觸控區) -->
+                    <button onclick="toggleTaskComplete('${task.id}')" class="mt-0.5 flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-indigo-500 bg-white'}" title="切換完成狀態">
+                        ${isDone ? '<i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>' : ''}
+                    </button>
+
+                    <!-- 主要資訊內容 -->
+                    <div class="flex-1 min-w-0 space-y-2">
+                        <!-- 日期(總覽模式)、時間、提醒狀態與承辦單位標籤 -->
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            ${showDateBadge ? `
+                                <button onclick="selectSpecificDate('${task.date}')" class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition">
+                                    ${escapeHtml(task.date.slice(5))} (${dateInfo.weekday})
+                                </button>
+                            ` : ''}
+                            ${task.time ? `
+                                <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-md ${isDone ? 'bg-slate-200 text-slate-600' : 'bg-indigo-50 text-indigo-700'}">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                    ${escapeHtml(task.time)}
+                                </span>
+                            ` : ''}
+                            ${hasActiveReminder ? `
+                                <span class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200/60" title="已開啟時間提醒">
+                                    <i data-lucide="bell" class="w-3 h-3 text-amber-500"></i>
+                                    ${escapeHtml(leadText)}
+                                </span>
+                            ` : ''}
+                            ${task.dept ? `
+                                <span class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                                    <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+                                    ${escapeHtml(task.dept)}
+                                </span>
+                            ` : ''}
+                        </div>
+
+                        <!-- 會議研習名稱 -->
+                        <h4 class="text-base font-bold leading-snug break-words ${isDone ? 'line-through text-slate-400' : 'text-slate-800'}">
+                            ${escapeHtml(task.title)}
+                        </h4>
+
+                        <!-- 地點與參加人員 -->
+                        ${(task.location || task.participants) ? `
+                            <div class="flex flex-col sm:flex-row sm:flex-wrap gap-y-1 gap-x-4 text-xs text-slate-500">
+                                ${task.location ? `
+                                    <div class="flex items-center gap-1.5">
+                                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-500 flex-shrink-0"></i>
+                                        <span>${escapeHtml(task.location)}</span>
+                                    </div>
+                                ` : ''}
+                                ${task.participants ? `
+                                    <div class="flex items-center gap-1.5">
+                                        <i data-lucide="users" class="w-3.5 h-3.5 text-sky-500 flex-shrink-0"></i>
+                                        <span>${escapeHtml(task.participants)}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+
+                        <!-- 行前籌備確認清單 (Checklist) -->
+                        ${subtasks.length > 0 ? `
+                            <div class="pt-1 space-y-1.5">
+                                <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                                    <i data-lucide="list-checks" class="w-3.5 h-3.5 text-indigo-500"></i>
+                                    <span>行前籌備 (${subtasks.filter(s => s.done).length}/${subtasks.length})</span>
+                                </div>
+                                <div class="space-y-1 pl-0.5">
+                                    ${subtasks.map((st, sIdx) => `
+                                        <button type="button" onclick="toggleSubtask('${task.id}', ${sIdx})" class="flex items-center gap-2 text-left w-full py-0.5 group">
+                                            <span class="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition ${st.done ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-slate-300 group-hover:border-indigo-400 bg-white'}">
+                                                ${st.done ? '<i data-lucide="check" class="w-3 h-3 stroke-[3]"></i>' : ''}
+                                            </span>
+                                            <span class="text-xs ${st.done ? 'line-through text-slate-400' : 'text-slate-700'}">${escapeHtml(st.text)}</span>
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- 個人註記與備註區塊 -->
+                        ${task.note ? `
+                            <div class="mt-2 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 text-xs text-slate-700 leading-relaxed whitespace-pre-line">
+                                <span class="font-semibold text-amber-800">備註：</span>${escapeHtml(task.note)}
+                            </div>
+                        ` : ''}
+
+                        <!-- 卡片底部快捷協作工具列 (LINE 複製文案 / 匯出手機日曆 .ics) -->
+                        <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="copyLineShareText('${task.id}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-medium transition">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                <span>複製通知文案</span>
+                            </button>
+                            <button type="button" onclick="downloadTaskIcs('${task.id}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-medium transition">
+                                <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                                <span>加到手機日曆</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 操作按鈕 (編輯 / 刪除) -->
+                    <div class="flex flex-col items-center gap-1 flex-shrink-0">
+                        <button onclick="openTaskModal('${task.id}')" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition" title="編輯註記與內容">
+                            <i data-lucide="pencil" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="confirmDeleteTask('${task.id}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition" title="刪除事項">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        // ==================== 行前清單與協作分享功能 ====================
+        function toggleSubtask(taskId, subtaskIdx) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task || !Array.isArray(task.subtasks) || !task.subtasks[subtaskIdx]) return;
+            task.subtasks[subtaskIdx].done = !task.subtasks[subtaskIdx].done;
+            saveToLocalStorage();
+            renderTasks();
+        }
+
+        function copyLineShareText(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            const dateInfo = formatDisplayDate(task.date);
+            const lines = [
+                `📅 【行程提醒】${task.title}`,
+                `🕒 時間：${dateInfo.text} (${dateInfo.weekday}) ${task.time || ''}`.trim(),
+                task.location ? `📍 地點：${task.location}` : '',
+                task.dept ? `🏢 承辦：${task.dept}` : '',
+                task.participants ? `👥 人員：${task.participants}` : '',
+                task.note ? `📝 備註：${task.note}` : ''
+            ].filter(Boolean);
+
+            const textToCopy = lines.join('\n');
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('已複製通知文案，可直接貼到 LINE 群組！');
+            } catch (e) {
+                showToast('複製失敗，請手動選取文字', 'error');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function downloadTaskIcs(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task || !task.date) return;
+
+            const dateCompact = task.date.replace(/-/g, '');
+            const startTime = extractStartTime(task.time);
+            let dtStart = '';
+            let dtEnd = '';
+
+            if (startTime) {
+                const startH = String(startTime.hour).padStart(2, '0');
+                const startM = String(startTime.minute).padStart(2, '0');
+                dtStart = `DTSTART:${dateCompact}T${startH}${startM}00`;
+
+                // 預設結束時間為開始後 1 小時 (若時程有寫結束時間則抓取)
+                const endMatch = (task.time || '').match(/[-~～至]\s*(\d{1,2})[:：](\d{2})/);
+                let endH = String(Math.min(23, startTime.hour + 1)).padStart(2, '0');
+                let endM = startM;
+                if (endMatch) {
+                    endH = endMatch[1].padStart(2, '0');
+                    endM = endMatch[2].padStart(2, '0');
+                }
+                dtEnd = `DTEND:${dateCompact}T${endH}${endM}00`;
+            } else {
+                // 全天事件
+                dtStart = `DTSTART;VALUE=DATE:${dateCompact}`;
+                dtEnd = `DTEND;VALUE=DATE:${dateCompact}`;
+            }
+
+            const descParts = [
+                task.dept ? `承辦處室：${task.dept}` : '',
+                task.participants ? `參加人員：${task.participants}` : '',
+                task.note ? `備註：${task.note}` : ''
+            ].filter(Boolean).join('\\n');
+
+            const icsContent = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//SmartCalendar//TW',
+                'BEGIN:VEVENT',
+                `UID:${task.id}@smartcalendar`,
+                dtStart,
+                dtEnd,
+                `SUMMARY:${(task.title || '').replace(/[\r\n]+/g, ' ')}`,
+                task.location ? `LOCATION:${task.location.replace(/[\r\n]+/g, ' ')}` : '',
+                descParts ? `DESCRIPTION:${descParts}` : '',
+                'END:VEVENT',
+                'END:VCALENDAR'
+            ].filter(Boolean).join('\r\n');
+
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${task.date}_${task.title.slice(0, 15)}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('已下載行事曆檔 (.ics)，點擊即可匯入日曆');
+        }
+
+        // ==================== 新增、編輯與刪除事項 ====================
+        function renderModalSubtasks() {
+            const listEl = document.getElementById('modalSubtaskList');
+            if (tempModalSubtasks.length === 0) {
+                listEl.innerHTML = '';
+                return;
+            }
+            listEl.innerHTML = tempModalSubtasks.map((st, idx) => `
+                <li class="flex items-center justify-between bg-white px-3 py-1.5 rounded-lg border border-slate-200 text-xs">
+                    <span class="text-slate-700 truncate pr-2">${escapeHtml(st.text)}</span>
+                    <button type="button" onclick="removeSubtaskInModal(${idx})" class="text-slate-400 hover:text-rose-500 p-0.5">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                </li>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addSubtaskInModal() {
+            const input = document.getElementById('newSubtaskInput');
+            const text = input.value.trim();
+            if (!text) return;
+            tempModalSubtasks.push({ text, done: false });
+            input.value = '';
+            renderModalSubtasks();
+        }
+
+        function removeSubtaskInModal(idx) {
+            tempModalSubtasks.splice(idx, 1);
+            renderModalSubtasks();
         }
 
         function formatDisplayDate(dateStr) {
@@ -572,143 +1237,14 @@
             };
         }
 
-        // ==================== 核心渲染畫面 ====================
-        function renderTasks() {
-            const container = document.getElementById('taskListContainer');
-            const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
-
-            // 更新頂部日期文字
-            const dateInfo = formatDisplayDate(selectedDate);
-            document.getElementById('displayDateText').textContent = dateInfo.text;
-            document.getElementById('displayWeekday').textContent = dateInfo.weekday;
-
-            // 篩選當日資料
-            let dayTasks = tasks.filter(t => t.date === selectedDate);
-
-            // 更新統計徽章 (總數與未完成數)
-            const totalCount = dayTasks.length;
-            const pendingCount = dayTasks.filter(t => !t.completed).length;
-            document.getElementById('pendingBadge').textContent = `待辦: ${pendingCount}`;
-            document.getElementById('totalBadge').textContent = `總計: ${totalCount}`;
-
-            // 關鍵字搜尋過濾
-            if (searchQuery) {
-                dayTasks = dayTasks.filter(t => 
-                    (t.title && t.title.toLowerCase().includes(searchQuery)) ||
-                    (t.location && t.location.toLowerCase().includes(searchQuery)) ||
-                    (t.dept && t.dept.toLowerCase().includes(searchQuery)) ||
-                    (t.participants && t.participants.toLowerCase().includes(searchQuery)) ||
-                    (t.note && t.note.toLowerCase().includes(searchQuery))
-                );
+        function toggleTaskComplete(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                saveToLocalStorage();
+                renderTasks();
+                showToast(task.completed ? '已標記為完成' : '已恢復為未完成');
             }
-
-            // 排序：未完成在前、已完成在後；同狀態依時間排序
-            dayTasks.sort((a, b) => {
-                if (a.completed !== b.completed) return a.completed ? 1 : -1;
-                return (a.time || '').localeCompare(b.time || '');
-            });
-
-            // 空狀態處理
-            if (dayTasks.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center space-y-3 fade-in">
-                        <div class="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto">
-                            <i data-lucide="calendar-off" class="w-7 h-7"></i>
-                        </div>
-                        <div class="space-y-1">
-                            <h3 class="text-base font-bold text-slate-700">${searchQuery ? '找不到符合條件的事項' : '當日尚無安排行程'}</h3>
-                            <p class="text-xs text-slate-400">${searchQuery ? '請嘗試其他關鍵字，或清空搜尋欄位' : '點擊右下角「新增行程」，或從右上角同步 Google 試算表'}</p>
-                        </div>
-                    </div>
-                `;
-                lucide.createIcons();
-                return;
-            }
-
-            // 渲染卡片列表
-            container.innerHTML = dayTasks.map(task => {
-                const isDone = task.completed;
-                const leadText = getTaskReminderLabel(task);
-                const hasActiveReminder = reminderConfig.enabled && !isDone && task.reminder !== 'none';
-
-                return `
-                <div class="bg-white rounded-2xl border ${isDone ? 'border-slate-200/70 bg-slate-50/70 opacity-75' : 'border-slate-200 shadow-sm'} p-4 transition-all fade-in">
-                    <div class="flex items-start gap-3.5">
-                        <!-- 勾選框 (加大觸控區) -->
-                        <button onclick="toggleTaskComplete('${task.id}')" class="mt-0.5 flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-indigo-500 bg-white'}" title="切換完成狀態">
-                            ${isDone ? '<i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>' : ''}
-                        </button>
-
-                        <!-- 主要資訊內容 -->
-                        <div class="flex-1 min-w-0 space-y-2">
-                            <!-- 時間、提醒狀態與承辦單位標籤 -->
-                            <div class="flex flex-wrap items-center gap-2">
-                                ${task.time ? `
-                                    <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-md ${isDone ? 'bg-slate-200 text-slate-600' : 'bg-indigo-50 text-indigo-700'}">
-                                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                        ${escapeHtml(task.time)}
-                                    </span>
-                                ` : ''}
-                                ${hasActiveReminder ? `
-                                    <span class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200/60" title="已開啟時間提醒">
-                                        <i data-lucide="bell" class="w-3 h-3 text-amber-500"></i>
-                                        ${escapeHtml(leadText)}
-                                    </span>
-                                ` : ''}
-                                ${task.dept ? `
-                                    <span class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                                        <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
-                                        ${escapeHtml(task.dept)}
-                                    </span>
-                                ` : ''}
-                            </div>
-
-                            <!-- 會議研習名稱 -->
-                            <h4 class="text-base font-bold leading-snug break-words ${isDone ? 'line-through text-slate-400' : 'text-slate-800'}">
-                                ${escapeHtml(task.title)}
-                            </h4>
-
-                            <!-- 地點與參加人員 -->
-                            ${(task.location || task.participants) ? `
-                                <div class="flex flex-col sm:flex-row sm:flex-wrap gap-y-1 gap-x-4 text-xs text-slate-500">
-                                    ${task.location ? `
-                                        <div class="flex items-center gap-1.5">
-                                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-500 flex-shrink-0"></i>
-                                            <span>${escapeHtml(task.location)}</span>
-                                        </div>
-                                    ` : ''}
-                                    ${task.participants ? `
-                                        <div class="flex items-center gap-1.5">
-                                            <i data-lucide="users" class="w-3.5 h-3.5 text-sky-500 flex-shrink-0"></i>
-                                            <span>${escapeHtml(task.participants)}</span>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            ` : ''}
-
-                            <!-- 個人註記與備註區塊 -->
-                            ${task.note ? `
-                                <div class="mt-2 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 text-xs text-slate-700 leading-relaxed whitespace-pre-line">
-                                    <span class="font-semibold text-amber-800">備註：</span>${escapeHtml(task.note)}
-                                </div>
-                            ` : ''}
-                        </div>
-
-                        <!-- 操作按鈕 (編輯 / 刪除) -->
-                        <div class="flex flex-col sm:flex-row items-center gap-1 flex-shrink-0">
-                            <button onclick="openTaskModal('${task.id}')" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition" title="編輯註記與內容">
-                                <i data-lucide="pencil" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="confirmDeleteTask('${task.id}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition" title="刪除事項">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                `;
-            }).join('');
-
-            lucide.createIcons();
         }
 
         // ==================== 新增、編輯與刪除事項 ====================
@@ -725,6 +1261,7 @@
         function openTaskModal(id = null) {
             const form = document.getElementById('taskForm');
             form.reset();
+            tempModalSubtasks = [];
             
             if (id) {
                 const task = tasks.find(t => t.id === id);
@@ -738,6 +1275,7 @@
                 document.getElementById('taskDept').value = task.dept || '';
                 document.getElementById('taskParticipants').value = task.participants || '';
                 document.getElementById('taskNote').value = task.note || '';
+                tempModalSubtasks = Array.isArray(task.subtasks) ? JSON.parse(JSON.stringify(task.subtasks)) : [];
 
                 if (task.reminder === 'none') {
                     document.getElementById('taskReminderMode').value = 'none';
@@ -759,6 +1297,7 @@
                 document.getElementById('taskRemHours').value = reminderConfig.hours || 0;
             }
 
+            renderModalSubtasks();
             toggleTaskCustomReminderInputs();
             document.getElementById('taskModal').classList.remove('hidden');
             lucide.createIcons();
@@ -779,6 +1318,12 @@
                 };
             }
 
+            // 若輸入框內還有尚未按「+ 加入」的文字，自動一併納入清單
+            const pendingSubText = document.getElementById('newSubtaskInput').value.trim();
+            if (pendingSubText) {
+                tempModalSubtasks.push({ text: pendingSubText, done: false });
+            }
+
             const taskData = {
                 date: document.getElementById('taskDate').value,
                 time: document.getElementById('taskTime').value.trim(),
@@ -786,6 +1331,7 @@
                 location: document.getElementById('taskLocation').value.trim(),
                 dept: document.getElementById('taskDept').value.trim(),
                 participants: document.getElementById('taskParticipants').value.trim(),
+                subtasks: tempModalSubtasks,
                 reminder: reminderValue,
                 note: document.getElementById('taskNote').value.trim()
             };
@@ -814,6 +1360,7 @@
             if (taskData.date !== selectedDate) {
                 selectedDate = taskData.date;
                 document.getElementById('datePicker').value = selectedDate;
+                syncCalendarMonthToSelected();
             }
 
             saveToLocalStorage();
@@ -821,13 +1368,94 @@
             closeModal('taskModal');
         }
 
-        function toggleTaskComplete(id) {
-            const task = tasks.find(t => t.id === id);
-            if (task) {
-                task.completed = !task.completed;
-                saveToLocalStorage();
-                renderTasks();
-                showToast(task.completed ? '已標記為完成' : '已恢復為待辦');
+        async function syncGoogleSheet(isSilentBackground = false) {
+            const urlInput = document.getElementById('googleSheetUrl').value.trim();
+            const sheetNameInput = document.getElementById('googleSheetName').value.trim();
+            const errorBox = document.getElementById('syncErrorBox');
+            const errorMsg = document.getElementById('syncErrorMsg');
+            errorBox.classList.add('hidden');
+
+            if (!urlInput) {
+                if (!isSilentBackground) {
+                    errorMsg.textContent = '請先貼上 Google Sheet 的共用網址。';
+                    errorBox.classList.remove('hidden');
+                }
+                return;
+            }
+
+            const parsedUrl = parseGoogleSheetUrl(urlInput);
+            if (parsedUrl.error) {
+                if (!isSilentBackground) {
+                    errorMsg.textContent = parsedUrl.error;
+                    errorBox.classList.remove('hidden');
+                }
+                return;
+            }
+
+            const syncBtn = document.getElementById('syncBtn');
+            const originalHtml = syncBtn.innerHTML;
+            if (!isSilentBackground) {
+                syncBtn.disabled = true;
+                syncBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>雲端讀取中...</span>';
+                lucide.createIcons();
+            }
+
+            try {
+                localStorage.setItem(SHEET_URL_KEY, urlInput);
+                localStorage.setItem(SHEET_NAME_KEY, sheetNameInput);
+
+                // 透過 JSONP 抓取指定分頁資料，避開 CORS 限制
+                const gvizResponse = await fetchGoogleSheetViaJsonp(parsedUrl.sheetId, parsedUrl.gid, sheetNameInput);
+                const rows = convertGvizTableToRows(gvizResponse.table);
+
+                const result = processImportedRows(rows, 'google_sheet', isSilentBackground);
+                if (result.success) {
+                    localStorage.setItem(LAST_SYNC_KEY, String(Date.now()));
+                    updateLastSyncDisplay();
+                    if (!isSilentBackground) closeModal('sheetModal');
+                } else if (!isSilentBackground) {
+                    errorMsg.textContent = result.message;
+                    errorBox.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Google Sheet 同步錯誤:', error);
+                if (!isSilentBackground) {
+                    errorMsg.textContent = error.message || '同步發生未知錯誤，請檢查試算表權限與分頁名稱。';
+                    errorBox.classList.remove('hidden');
+                }
+            } finally {
+                if (!isSilentBackground) {
+                    syncBtn.disabled = false;
+                    syncBtn.innerHTML = originalHtml;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        function saveAutoSyncSetting() {
+            const enabled = document.getElementById('autoSyncToggle').checked;
+            localStorage.setItem(AUTO_SYNC_KEY, String(enabled));
+        }
+
+        function updateLastSyncDisplay() {
+            const lastSync = localStorage.getItem(LAST_SYNC_KEY);
+            const el = document.getElementById('lastSyncText');
+            if (!lastSync || !el) return;
+            const d = new Date(Number(lastSync));
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            el.textContent = `上次同步 ${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`;
+        }
+
+        function checkAutoBackgroundSync() {
+            const autoEnabled = document.getElementById('autoSyncToggle').checked;
+            const savedUrl = localStorage.getItem(SHEET_URL_KEY);
+            if (!autoEnabled || !savedUrl) return;
+
+            const lastSync = Number(localStorage.getItem(LAST_SYNC_KEY) || 0);
+            const oneHourMs = 3600 * 1000;
+            if (Date.now() - lastSync > oneHourMs) {
+                syncGoogleSheet(true);
             }
         }
 
@@ -986,58 +1614,6 @@
             });
         }
 
-        async function syncGoogleSheet() {
-            const urlInput = document.getElementById('googleSheetUrl').value.trim();
-            const sheetNameInput = document.getElementById('googleSheetName').value.trim();
-            const errorBox = document.getElementById('syncErrorBox');
-            const errorMsg = document.getElementById('syncErrorMsg');
-            errorBox.classList.add('hidden');
-
-            if (!urlInput) {
-                errorMsg.textContent = '請先貼上 Google Sheet 的共用網址。';
-                errorBox.classList.remove('hidden');
-                return;
-            }
-
-            const parsedUrl = parseGoogleSheetUrl(urlInput);
-            if (parsedUrl.error) {
-                errorMsg.textContent = parsedUrl.error;
-                errorBox.classList.remove('hidden');
-                return;
-            }
-
-            const syncBtn = document.getElementById('syncBtn');
-            const originalHtml = syncBtn.innerHTML;
-            syncBtn.disabled = true;
-            syncBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>雲端讀取中...</span>';
-            lucide.createIcons();
-
-            try {
-                localStorage.setItem(SHEET_URL_KEY, urlInput);
-                localStorage.setItem(SHEET_NAME_KEY, sheetNameInput);
-
-                // 透過 JSONP 抓取指定分頁資料，避開 CORS 限制
-                const gvizResponse = await fetchGoogleSheetViaJsonp(parsedUrl.sheetId, parsedUrl.gid, sheetNameInput);
-                const rows = convertGvizTableToRows(gvizResponse.table);
-
-                const result = processImportedRows(rows, 'google_sheet');
-                if (result.success) {
-                    closeModal('sheetModal');
-                } else {
-                    errorMsg.textContent = result.message;
-                    errorBox.classList.remove('hidden');
-                }
-            } catch (error) {
-                console.error('Google Sheet 同步錯誤:', error);
-                errorMsg.textContent = error.message || '同步發生未知錯誤，請檢查試算表權限與分頁名稱。';
-                errorBox.classList.remove('hidden');
-            } finally {
-                syncBtn.disabled = false;
-                syncBtn.innerHTML = originalHtml;
-                lucide.createIcons();
-            }
-        }
-
         // 本機 Excel 上傳處理
         function handleLocalExcelUpload(event) {
             const file = event.target.files[0];
@@ -1069,7 +1645,7 @@
          * 核心資料映射邏輯：
          * 對應欄位："活動起訖\n時程"、"會議研習名稱"、"參加地點"、"參加人員"、"承辦處室(組 別)"、"備  註"
          */
-        function processImportedRows(rows, sourceType) {
+        function processImportedRows(rows, sourceType, isSilentBackground = false) {
             if (!rows || rows.length === 0) {
                 return { success: false, message: '試算表中沒有找到任何資料列，請確認第一列為欄位標題。' };
             }
@@ -1154,7 +1730,7 @@
                 // 檢查是否為完全重複匯入
                 const hasAnyMatch = rows.some(r => Object.values(r).some(v => v));
                 if (hasAnyMatch) {
-                    showToast('雲端資料已是最新狀態（無新增項目）', 'info');
+                    if (!isSilentBackground) showToast('雲端資料已是最新狀態（無新增項目）', 'info');
                     return { success: true };
                 }
                 return { success: false, message: '找不到符合的欄位名稱，請確認試算表包含「活動起訖時程」與「會議研習名稱」。' };
@@ -1163,13 +1739,14 @@
             saveToLocalStorage();
 
             const currentDayHasTasks = tasks.some(t => t.date === selectedDate);
-            if (!currentDayHasTasks && firstImportedDate) {
+            if (!currentDayHasTasks && firstImportedDate && !isSilentBackground) {
                 selectedDate = firstImportedDate;
                 document.getElementById('datePicker').value = selectedDate;
+                syncCalendarMonthToSelected();
             }
 
             renderTasks();
-            showToast(`同步完成！成功匯入 ${addedCount} 筆新行程`);
+            showToast(isSilentBackground ? `背景自動同步完成，新增 ${addedCount} 筆行程` : `同步完成！成功匯入 ${addedCount} 筆新行程`);
             return { success: true };
         }
 
@@ -1613,6 +2190,92 @@
                 location: '第一會議室'
             };
             triggerAlertForTask(sampleTask, currentLead, true);
+        }
+
+        // ==================== 今日與近期行程晨間簡報 ====================
+        function saveBriefingPreference() {
+            const enabled = document.getElementById('dailyBriefingToggle').checked;
+            localStorage.setItem(BRIEFING_ENABLED_KEY, String(enabled));
+        }
+
+        function checkDailyBriefing() {
+            const enabled = document.getElementById('dailyBriefingToggle').checked;
+            if (!enabled) return;
+
+            const today = getTodayString();
+            const lastShown = localStorage.getItem(BRIEFING_DATE_KEY);
+            if (lastShown !== today && tasks.length > 0) {
+                localStorage.setItem(BRIEFING_DATE_KEY, today);
+                openBriefingModal();
+            }
+        }
+
+        function openBriefingModal() {
+            const today = getTodayString();
+            const threeDaysLaterObj = new Date(today + 'T00:00:00');
+            threeDaysLaterObj.setDate(threeDaysLaterObj.getDate() + 3);
+            const threeDaysStr = `${threeDaysLaterObj.getFullYear()}-${String(threeDaysLaterObj.getMonth() + 1).padStart(2, '0')}-${String(threeDaysLaterObj.getDate()).padStart(2, '0')}`;
+
+            const todayTasks = tasks.filter(t => t.date === today && !t.completed).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+            const upcomingTasks = tasks.filter(t => t.date > today && t.date <= threeDaysStr && !t.completed).sort((a, b) => a.date.localeCompare(b.date));
+
+            const dateInfo = formatDisplayDate(today);
+            const contentEl = document.getElementById('briefingContent');
+
+            contentEl.innerHTML = `
+                <div class="flex items-center justify-between bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <div>
+                        <div class="text-xs text-slate-500">今天日期</div>
+                        <div class="text-base font-bold text-slate-800">${dateInfo.text}（${dateInfo.weekday}）</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-slate-500">今日待辦</div>
+                        <div class="text-xl font-bold text-indigo-600">${todayTasks.length} <span class="text-xs font-normal text-slate-500">項</span></div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span> 今日待辦行程 (${todayTasks.length})
+                    </h4>
+                    ${todayTasks.length === 0 
+                        ? '<p class="text-xs text-slate-400 bg-slate-50 p-3 rounded-xl">今天沒有未完成的排程，享受美好的一天！</p>'
+                        : `<div class="space-y-2">${todayTasks.map(t => `
+                            <div onclick="closeModal('briefingModal'); selectSpecificDate('${t.date}')" class="p-3 rounded-xl border border-slate-200 hover:border-indigo-300 bg-white cursor-pointer transition">
+                                <div class="flex items-center justify-between text-xs text-indigo-600 font-semibold">
+                                    <span>${escapeHtml(t.time || '全天 / 未定時間')}</span>
+                                    <span>${escapeHtml(t.dept || '')}</span>
+                                </div>
+                                <div class="text-sm font-bold text-slate-800 mt-0.5">${escapeHtml(t.title)}</div>
+                                ${t.location ? `<div class="text-xs text-slate-500 mt-0.5">📍 ${escapeHtml(t.location)}</div>` : ''}
+                            </div>
+                        `).join('')}</div>`
+                    }
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> 未來 3 天即將到來 (${upcomingTasks.length})
+                    </h4>
+                    ${upcomingTasks.length === 0 
+                        ? '<p class="text-xs text-slate-400 bg-slate-50 p-3 rounded-xl">未來 3 天內暫無待辦行程。</p>'
+                        : `<div class="space-y-2">${upcomingTasks.map(t => {
+                            const dInfo = formatDisplayDate(t.date);
+                            return `
+                            <div onclick="closeModal('briefingModal'); selectSpecificDate('${t.date}')" class="p-3 rounded-xl border border-amber-200/70 bg-amber-50/40 hover:bg-amber-50 cursor-pointer transition">
+                                <div class="flex items-center justify-between text-xs text-amber-800 font-semibold">
+                                    <span>${t.date.slice(5)} (${dInfo.weekday}) ${escapeHtml(t.time || '')}</span>
+                                    <span>${escapeHtml(t.dept || '')}</span>
+                                </div>
+                                <div class="text-sm font-bold text-slate-800 mt-0.5">${escapeHtml(t.title)}</div>
+                            </div>
+                        `}).join('')}</div>`
+                    }
+                </div>
+            `;
+
+            document.getElementById('briefingModal').classList.remove('hidden');
+            lucide.createIcons();
         }
     </script>
 </body>
